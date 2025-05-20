@@ -1,0 +1,498 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Glog.AI",
+          "organization": "Glog.AI",
+          "fullName": "Glog, Making software more secure",
+          "version": "1.0.0",
+          "semanticVersion": "1.0.0",
+          "informationUri": "https://www.glog.ai",
+          "rules": [
+            {
+              "id": "glog-e27cb042-3e03-4990-b881-11ea3b51520c",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of certain C standard library functions that are known to be dangerous due to their potential to cause buffer overflows, format string vulnerabilities, or other issues. These functions are often prohibited in secure coding standards.\n\nThe `getenv` function is one such function. It is used to retrieve the value of an environment variable from the process environment. The problem with `getenv` is that it returns a pointer to a string that may be overwritten by subsequent calls to `getenv`, `setenv`, or `unsetenv`. This can lead to race conditions if the application is multithreaded.\n\n## Mitigation Advice\n\nAvoid using `getenv` in multithreaded applications. If you need to use environment variables, consider copying the values into your own buffers to avoid race conditions.\n\n## Source Code Fix Recommendation\n\nInstead of using `getenv`, you can use `secure_getenv` if it's available on your platform. `secure_getenv` behaves the same as `getenv` but returns NULL if the process is being run with elevated privileges. This can help prevent privilege escalation attacks.\n\nHere's an example of how you can use `secure_getenv`:\n\n```cpp\n#include <stdlib.h>\n\nconst char* value = secure_getenv(\"MY_VARIABLE\");\nif (value != NULL) {\n    // Use the value\n} else {\n    // Handle the error\n}\n```\n\n## Library Dependencies\n\nThe `getenv` and `secure_getenv` functions are part of the C standard library, so you don't need any additional libraries to use them.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "glog-ce646563-19b8-4517-9973-12f6fa22fedb",
+              "help": {
+                "text": "",
+                "markdown": "### Description\n\nThe vulnerability in question arises from the use of the `memcpy` function in C++. The `memcpy` function is used to copy a block of memory from one location to another. The issue here is that if the source or destination buffers are not properly sized, or if the number of bytes to copy (`num_channels * sizeof(T)`) exceeds the size of either buffer, it can lead to buffer overflows. This can cause undefined behavior, including data corruption, crashes, or security vulnerabilities such as arbitrary code execution.\n\n### General Mitigation Advice\n\n1. **Bounds Checking**: Always ensure that the destination buffer is large enough to hold the data being copied. Perform explicit bounds checking before calling `memcpy`.\n2. **Use Safer Alternatives**: Consider using safer alternatives like `std::copy` or `std::memmove` if overlapping memory regions are involved.\n3. **Static Analysis Tools**: Use static analysis tools to detect potential buffer overflows in your code.\n4. **Code Reviews**: Regularly perform code reviews to catch potential vulnerabilities early in the development process.\n\n### Source Code Fix Recommendation\n\nTo mitigate the vulnerability, ensure that the destination buffer is large enough to accommodate the data being copied. Here is a revised version of the code with added checks:\n\n```cpp\n#include <algorithm> // For std::copy\n#include <vector>    // For std::vector\n\ntemplate <typename T>\nvoid safeMemcpy(std::vector<T>& min_range, const std::vector<T>& input_min_tensor, size_t num_channels) {\n    // Ensure the destination buffer is large enough\n    if (min_range.size() < num_channels) {\n        throw std::out_of_range(\"Destination buffer is too small\");\n    }\n\n    // Ensure the source buffer is large enough\n    if (input_min_tensor.size() < num_channels) {\n        throw std::out_of_range(\"Source buffer is too small\");\n    }\n\n    // Use std::copy for safer copying\n    std::copy(input_min_tensor.begin(), input_min_tensor.begin() + num_channels, min_range.begin());\n}\n```\n\n### Library Dependencies\n\nTo execute the above code example, the following standard C++ libraries are required:\n\n- `<algorithm>`: Provides the `std::copy` function.\n- `<vector>`: Provides the `std::vector` container.\n\n### Relevant Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n- [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/)\n\n### Common Weakness Enumeration\n\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS121708"
+                ]
+              }
+            },
+            {
+              "id": "glog-ec2f665b-ae18-44ba-b260-8a6cf98588e9",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected C Function Prohibited\" vulnerability in C++ programming language refers to the use of certain C standard library functions that are considered unsafe due to their potential to cause buffer overflow, format string vulnerabilities, or other types of security issues. One such function is `printf`.\n\nThe `printf` function is a common function in C programming for output formatting. However, it can lead to vulnerabilities if not used correctly. For instance, if user-supplied data is passed directly to `printf` as the format string, it can lead to a format string vulnerability, which can allow an attacker to read or write to arbitrary memory, leading to information disclosure or code execution.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, avoid using `printf` and similar functions with variable format strings. Instead, use safer alternatives that do not allow for format string vulnerabilities, such as `puts` or `fputs` for simple string output. If formatted output is necessary, ensure that the format string is a constant and not user-supplied data.\n\n## Source Code Fix Recommendation\n\nInstead of:\n\n```cpp\nchar* user_supplied_string;\n// ...\nprintf(user_supplied_string);\n```\n\nUse:\n\n```cpp\nchar* user_supplied_string;\n// ...\nputs(user_supplied_string);\n```\n\nOr:\n\n```cpp\nchar* user_supplied_string;\n// ...\nfputs(user_supplied_string, stdout);\n```\n\n## Library Dependencies\n\nThe code examples above require the C standard library, which is typically included with `#include <stdio.h>`.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "glog-60591a0e-ba24-4c27-b13b-7c0d5d3891da",
+              "help": {
+                "text": "",
+                "markdown": "### Description\n\nThe vulnerability in question involves the use of the `memcpy` function in C++. The `memcpy` function is used to copy a block of memory from one location to another. The issue arises when the size of the destination buffer is not properly validated against the size of the source data being copied. This can lead to buffer overflows, which can cause undefined behavior, crashes, or security vulnerabilities such as arbitrary code execution.\n\n### General Mitigation Advice\n\n1. **Validate Buffer Sizes**: Always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the destination buffer against the size of the source data.\n\n2. **Use Safer Alternatives**: Consider using safer alternatives like `std::copy` or `std::memmove` which provide better safety guarantees and are less prone to misuse.\n\n3. **Static Analysis Tools**: Use static analysis tools to detect potential buffer overflows and other vulnerabilities in your code.\n\n4. **Code Reviews**: Regularly conduct code reviews to catch potential vulnerabilities early in the development process.\n\n### Source Code Fix Recommendation\n\nTo fix the specific vulnerability, ensure that the destination buffer `max_range` is large enough to accommodate the data being copied from `input_max_tensor->vec<T>().data()`. Here is a revised version of the code:\n\n```cpp\n#include <algorithm> // for std::copy\n#include <vector>\n\n// Assuming T is a defined type and input_max_tensor is properly initialized\nstd::vector<T> max_range(num_channels); // Ensure max_range is properly sized\n\n// Use std::copy for safer copying\nstd::copy(input_max_tensor->vec<T>().data(),\n          input_max_tensor->vec<T>().data() + num_channels,\n          max_range.begin());\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library dependencies are required:\n\n- `<algorithm>`: Provides the `std::copy` function.\n- `<vector>`: Provides the `std::vector` container.\n\n### Relevant Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n- [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/)\n\n### Common Weakness Enumeration\n\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS121708"
+                ]
+              }
+            },
+            {
+              "id": "glog-3cb254fb-5ad7-4e1c-ac7b-eb55a639bbdd",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of certain C standard library functions that are known to be dangerous due to their potential to cause buffer overflows, format string vulnerabilities, or other issues. These functions are often prohibited in secure coding standards.\n\nThe `getenv` function is one such function. It is used to retrieve the value of an environment variable from the process environment. The problem with `getenv` is that it returns a pointer to a string that may be overwritten by subsequent calls to `getenv`, `setenv`, or `unsetenv`. This can lead to race conditions if the application is multithreaded.\n\n## Mitigation Advice\n\nAvoid using `getenv` in multithreaded applications. If you need to use environment variables, consider copying the values into your own buffers to avoid race conditions.\n\n## Source Code Fix Recommendation\n\nInstead of using `getenv`, you can use `secure_getenv` if it's available on your platform. `secure_getenv` behaves the same as `getenv` but returns NULL if the process is being run with elevated privileges. This can help prevent privilege escalation attacks.\n\nHere's an example of how you can use `secure_getenv`:\n\n```cpp\n#include <stdlib.h>\n\nconst char* value = secure_getenv(\"MY_VARIABLE\");\nif (value != NULL) {\n    // Use the value\n} else {\n    // Handle the error\n}\n```\n\n## Library Dependencies\n\nThe `getenv` and `secure_getenv` functions are part of the C standard library, so you don't need any additional libraries to use them.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "glog-7b12f260-03fc-496d-bf14-7e954358df0e",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected C Function Prohibited\" vulnerability in C++ programming language refers to the use of certain C standard library functions that are considered unsafe due to their potential to cause buffer overflow, format string vulnerabilities, or other types of security issues. One such function is `printf`.\n\nThe `printf` function is a common function in C programming for output formatting. However, it can lead to vulnerabilities if not used correctly. For instance, if user-supplied data is passed directly to `printf` as the format string, it can lead to a format string vulnerability, which can allow an attacker to read or write to arbitrary memory, leading to information disclosure or code execution.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, avoid using `printf` and similar functions with variable format strings. Instead, use safer alternatives that do not allow for format string vulnerabilities, such as `puts` or `fputs` for simple string output. If formatted output is necessary, ensure that the format string is a constant and not user-supplied data.\n\n## Source Code Fix Recommendation\n\nInstead of:\n\n```cpp\nchar* user_supplied_string;\n// ...\nprintf(user_supplied_string);\n```\n\nUse:\n\n```cpp\nchar* user_supplied_string;\n// ...\nputs(user_supplied_string);\n```\n\nOr:\n\n```cpp\nchar* user_supplied_string;\n// ...\nfputs(user_supplied_string, stdout);\n```\n\n## Library Dependencies\n\nThe code examples above require the C standard library, which is typically included with `#include <stdio.h>`.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "glog-ae19a3b2-407a-45d1-9cd0-9f669a220143",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ programming language refers to the use of certain C standard library functions that are known to be dangerous due to their potential to cause buffer overflows, format string vulnerabilities, or other issues. These functions are often prohibited in secure coding standards. One such function is `fprintf`.\n\nThe `fprintf` function can lead to vulnerabilities if not used correctly. It can cause format string vulnerabilities if the format string is not a constant, or if it's a string that can be controlled by an attacker. This can lead to arbitrary code execution, crashes, or information leaks.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, avoid using `fprintf` and other similar functions that do not perform bounds checking. Instead, use safer alternatives that do perform bounds checking, such as `snprintf`. Always ensure that format strings are constants and cannot be controlled by an attacker.\n\n## Source Code Fix Recommendation\n\nReplace `fprintf` with `snprintf` as shown below:\n\n```cpp\n#include <cstdio>\n\n// Old vulnerable code\nvoid vulnerable_code(FILE* file, const char* data) {\n    fprintf(file, data);\n}\n\n// New secure code\nvoid secure_code(FILE* file, const char* data) {\n    char buffer[1024];\n    snprintf(buffer, sizeof(buffer), \"%s\", data);\n    fputs(buffer, file);\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library to execute properly:\n\n- `<cstdio>`\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "glog-c6fde4ed-84df-420d-9bd3-7c349b66ede0",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ programming language refers to the use of certain C standard library functions that are known to be dangerous due to their potential to cause buffer overflows, format string vulnerabilities, or other issues. These functions are often prohibited in secure coding standards. One such function is `fprintf`.\n\nThe `fprintf` function can lead to vulnerabilities if not used correctly. It can cause format string vulnerabilities if the format string is not a constant, or if it's a string that can be controlled by an attacker. This can lead to arbitrary code execution, crashes, or information leaks.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, avoid using `fprintf` and other similar functions that do not perform bounds checking. Instead, use safer alternatives that do perform bounds checking, such as `snprintf`. Always ensure that format strings are constants and cannot be controlled by an attacker.\n\n## Source Code Fix Recommendation\n\nReplace `fprintf` with `snprintf` as shown below:\n\n```cpp\n#include <cstdio>\n\n// Old vulnerable code\nvoid vulnerable_code(FILE* file, const char* data) {\n    fprintf(file, data);\n}\n\n// New secure code\nvoid secure_code(FILE* file, const char* data) {\n    char buffer[1024];\n    snprintf(buffer, sizeof(buffer), \"%s\", data);\n    fputs(buffer, file);\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library to execute properly:\n\n- `<cstdio>`\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            }
+          ],
+          "language": "en-US",
+          "contents": [
+            "localizedData",
+            "nonLocalizedData"
+          ],
+          "isComprehensive": false
+        }
+      },
+      "language": "en-US",
+      "results": [
+        {
+          "ruleId": "glog-e27cb042-3e03-4990-b881-11ea3b51520c",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Banned C function detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tensorflow/python/client/session_ref.cc"
+                },
+                "region": {
+                  "startLine": 384,
+                  "startColumn": 6,
+                  "endLine": 384,
+                  "endColumn": 12,
+                  "charOffset": 13454,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-ce646563-19b8-4517-9973-12f6fa22fedb",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tensorflow/core/kernels/quantize_and_dequantize_op.h"
+                },
+                "region": {
+                  "startLine": 245,
+                  "startColumn": 11,
+                  "endLine": 246,
+                  "endColumn": 42,
+                  "charOffset": 11098,
+                  "charLength": 102,
+                  "snippet": {
+                    "text": "memcpy(min_range.data(), input_min_tensor->vec<T>().data(),\n                  num_channels * sizeof(T)",
+                    "rendered": {
+                      "text": "memcpy(min_range.data(), input_min_tensor->vec<T>().data(),\n                  num_channels * sizeof(T)",
+                      "markdown": "`memcpy(min_range.data(), input_min_tensor->vec<T>().data(),\n                  num_channels * sizeof(T)`"
+                    }
+                  },
+                  "sourceLanguage": "c"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "tensorflow/core/kernels/quantize_and_dequantize_op.h"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 11098,
+                        "charLength": 102
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(min_range.data(), <size of min_range.data()>,  input_min_tensor->vec<T>().data(), \n                  num_channels * sizeof(T)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-ec2f665b-ae18-44ba-b260-8a6cf98588e9",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Banned C function detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tensorflow/python/framework/python_op_gen.cc"
+                },
+                "region": {
+                  "startLine": 2123,
+                  "startColumn": 2,
+                  "endLine": 2123,
+                  "endColumn": 8,
+                  "charOffset": 85241,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "printf",
+                    "rendered": {
+                      "text": "printf",
+                      "markdown": "`printf`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-60591a0e-ba24-4c27-b13b-7c0d5d3891da",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tensorflow/core/kernels/quantize_and_dequantize_op.h"
+                },
+                "region": {
+                  "startLine": 247,
+                  "startColumn": 11,
+                  "endLine": 248,
+                  "endColumn": 42,
+                  "charOffset": 11214,
+                  "charLength": 102,
+                  "snippet": {
+                    "text": "memcpy(max_range.data(), input_max_tensor->vec<T>().data(),\n                  num_channels * sizeof(T)",
+                    "rendered": {
+                      "text": "memcpy(max_range.data(), input_max_tensor->vec<T>().data(),\n                  num_channels * sizeof(T)",
+                      "markdown": "`memcpy(max_range.data(), input_max_tensor->vec<T>().data(),\n                  num_channels * sizeof(T)`"
+                    }
+                  },
+                  "sourceLanguage": "c"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "tensorflow/core/kernels/quantize_and_dequantize_op.h"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 11214,
+                        "charLength": 102
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(max_range.data(), <size of max_range.data()>,  input_max_tensor->vec<T>().data(), \n                  num_channels * sizeof(T)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-3cb254fb-5ad7-4e1c-ac7b-eb55a639bbdd",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Banned C function detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tensorflow/python/client/session_ref.cc"
+                },
+                "region": {
+                  "startLine": 96,
+                  "startColumn": 31,
+                  "endLine": 96,
+                  "endColumn": 37,
+                  "charOffset": 3312,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-7b12f260-03fc-496d-bf14-7e954358df0e",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Banned C function detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tensorflow/python/framework/python_op_gen_main.cc"
+                },
+                "region": {
+                  "startLine": 145,
+                  "startColumn": 4,
+                  "endLine": 145,
+                  "endColumn": 10,
+                  "charOffset": 5527,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "printf",
+                    "rendered": {
+                      "text": "printf",
+                      "markdown": "`printf`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-ae19a3b2-407a-45d1-9cd0-9f669a220143",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Banned C function detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tensorflow/cc/framework/cc_op_gen_main.cc"
+                },
+                "region": {
+                  "startLine": 56,
+                  "startColumn": 4,
+                  "endLine": 56,
+                  "endColumn": 11,
+                  "charOffset": 1945,
+                  "charLength": 7,
+                  "snippet": {
+                    "text": "fprintf",
+                    "rendered": {
+                      "text": "fprintf",
+                      "markdown": "`fprintf`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-c6fde4ed-84df-420d-9bd3-7c349b66ede0",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Banned C function detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tensorflow/cc/framework/cc_op_gen_main.cc"
+                },
+                "region": {
+                  "startLine": 54,
+                  "startColumn": 6,
+                  "endLine": 54,
+                  "endColumn": 13,
+                  "charOffset": 1889,
+                  "charLength": 7,
+                  "snippet": {
+                    "text": "fprintf",
+                    "rendered": {
+                      "text": "fprintf",
+                      "markdown": "`fprintf`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        }
+      ],
+      "newlineSequences": [
+        "\r\n",
+        "\n"
+      ]
+    }
+  ]
+}
